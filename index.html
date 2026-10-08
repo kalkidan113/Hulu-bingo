@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hulu Bingo Mini App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1c2430;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #f39c12; margin-bottom: 5px; }
+        .card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            max-width: 320px;
+            margin: 20px auto;
+            background: #2c3e50;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .cell {
+            background: #34495e;
+            padding: 15px 5px;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .header { background: #e67e22; color: #fff; }
+        .free { background: #27ae60; }
+        .btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .btn:active { background: #1e8449; }
+    </style>
+</head>
+<body>
+
+    <h1>🎲 ሁሉ ቢንጎ 🎲</h1>
+    <p>እንኳን ወደ ቢንጎ ጨዋታ በደህና መጡ!</p>
+
+    <div class="card" id="bingoCard">
+        <div class="cell header">B</div>
+        <div class="cell header">I</div>
+        <div class="cell header">N</div>
+        <div class="cell header">G</div>
+        <div class="cell header">O</div>
+    </div>
+
+    <button class="btn" onclick="generateCard()">አዲስ ካርድ ቁረጥ (10 ብር)</button>
+
+    <script>
+        function getRandomNumbers(min, max, count) {
+            let nums = [];
+            while(nums.length < count){
+                let r = Math.floor(Math.random() * (max - min + 1)) + min;
+                if(nums.indexOf(r) === -1) nums.push(r);
+            }
+            return nums;
+        }
+
+        function generateCard() {
+            const card = document.getElementById("bingoCard");
+            // የቀደሙትን ቁጥሮች ማፅዳት (ከ B-I-N-G-O ርዕስ ውጪ)
+            card.innerHTML = `
+                <div class="cell header">B</div>
+                <div class="cell header">I</div>
+                <div class="cell header">N</div>
+                <div class="cell header">G</div>
+                <div class="cell header">O</div>
+            `;
+
+            let b = getRandomNumbers(1, 15, 5);
+            let i = getRandomNumbers(16, 30, 5);
+            let n = getRandomNumbers(31, 45, 5);
+            let g = getRandomNumbers(46, 60, 5);
+            let o = getRandomNumbers(61, 75, 5);
+
+            for(let row = 0; row < 5; row++) {
+                let rowNums = [b[row], i[row], (row === 2 ? "FREE" : n[row]), g[row], o[row]];
+                rowNums.forEach((num, colIndex) => {
+                    let cell = document.createElement("div");
+                    cell.className = "cell" + (num === "FREE" ? " free" : "");
+                    cell.innerText = num;
+                    card.appendChild(cell);
+                });
+            }
+        }
+
+        // ገጹ ሲከፈት የመጀመሪያ ካርድ ማሳየት
+        generateCard();
+    </script>
+</body>
+</html>
