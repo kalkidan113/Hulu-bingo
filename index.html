@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ሁሉ ቢንጎ - Hulu Bingo Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #17212b;
+            color: #ffffff;
+            text-align: center;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #f39c12;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .number-box {
+            background: #e67e22;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 330px;
+            min-height: 45px;
+        }
+        .bingo-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 330px;
+            background: #242f3d;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .cell {
+            background: #0e1621;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #2b394a;
+            user-select: none;
+            cursor: pointer;
+        }
+        .header {
+            background: #d35400;
+            color: #fff;
+            font-size: 18px;
+            cursor: default;
+        }
+        .free {
+            background: #27ae60;
+            color: #fff;
+            font-size: 12px;
+        }
+        .marked {
+            background: #e74c3c !important;
+            color: #fff;
+        }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 330px;
+            margin-top: 15px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-card {
+            background: #2481cc;
+            color: white;
+        }
+        .btn-bingo {
+            background: #27ae60;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎲 ሁሉ ቢንጎ 🎲</h1>
+    
+    <div class="number-box" id="callerBox">🎲 ጨዋታ ለመጀመር አዲስ ካርድ ይቁረጡ!</div>
+
+    <div class="bingo-card" id="bingoCard">
+        <div class="cell header">B</div>
+        <div class="cell header">I</div>
+        <div class="cell header">N</div>
+        <div class="cell header">G</div>
+        <div class="cell header">O</div>
+    </div>
+
+    <div class="btn-container">
+        <button class="btn btn-card" onclick="generateCard()">አዲስ ካርድ (10 ብር)</button>
+        <button class="btn btn-bingo" onclick="claimBingo()">BINGO! 🏆</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        if (tg) tg.expand();
+
+        let drawnNumbers = [];
+        let callInterval = null;
+
+        function getRandomNumbers(min, max, count) {
+            let nums = [];
+            while(nums.length < count){
+                let r = Math.floor(Math.random() * (max - min + 1)) + min;
+                if(nums.indexOf(r) === -1) nums.push(r);
+            }
+            return nums;
+        }
+
+        function generateCard() {
+            const card = document.getElementById("bingoCard");
+            card.innerHTML = "";
+
+            // Header Row
+            const headers = ["B", "I", "N", "G", "O"];
+            headers.forEach(h => {
+                let cell = document.createElement("div");
+                cell.className = "cell header";
+                cell.innerText = h;
+                card.appendChild(cell);
+            });
+
+            let b = getRandomNumbers(1, 15, 5);
+            let i = getRandomNumbers(16, 30, 5);
+            let n = getRandomNumbers(31, 45, 5);
+            let g = getRandomNumbers(46, 60, 5);
+            let o = getRandomNumbers(61, 75, 5);
+
+            for(let row = 0; row < 5; row++) {
+                let rowNums = [b[row], i[row], (row === 2 ? "FREE" : n[row]), g[row], o[row]];
+                rowNums.forEach((num) => {
+                    let cell = document.createElement("div");
+                    cell.className = "cell" + (num === "FREE" ? " free" : "");
+                    cell.innerText = num;
+                    cell.onclick = function() {
+                        if(num !== "FREE") {
+                            this.classList.toggle("marked");
+                        }
+                    };
+                    card.appendChild(cell);
+                });
+            }
+
+            startCallingNumbers();
+        }
+
+        function startCallingNumbers() {
+            if (callInterval) clearInterval(callInterval);
+            drawnNumbers = [];
+            document.getElementById("callerBox").innerText = "🎲 ቁጥር መውጣት ሊጀምር ነው...";
+
+            callInterval = setInterval(() => {
+                if(drawnNumbers.length >= 75) {
+                    clearInterval(callInterval);
+                    document.getElementById("callerBox").innerText = "🏁 ሁሉም ቁጥሮች ወጥተዋል!";
+                    return;
+                }
+                let nextNum;
+                do {
+                    nextNum = Math.floor(Math.random() * 75) + 1;
+                } while(drawnNumbers.includes(nextNum));
+
+                drawnNumbers.push(nextNum);
+                document.getElementById("callerBox").innerText = "🎲 የወጣው ቁጥር: " + nextNum + " (" + drawnNumbers.length + "/75)";
+            }, 3000);
+        }
+
+        function claimBingo() {
+            if (tg && tg.sendData) {
+                tg.sendData("BINGO_CLAIMED");
+            }
+            alert("🎉 BINGO ጥያቄዎ ለቦቱ ተልኳል!");
+        }
+    </script>
+</body>
+</html>
